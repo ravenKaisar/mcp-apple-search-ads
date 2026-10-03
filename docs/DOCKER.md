@@ -5,6 +5,7 @@ The image runs the MCP server with the **HTTP transport** on port 8080.
 | Property                    | Value                                                                                           |
 | --------------------------- | ----------------------------------------------------------------------------------------------- |
 | Build                       | Multi-stage: `npm ci` + `tsc` in the build stage, `npm prune --omit=dev`                        |
+| Multi-arch                  | Build stage runs natively on the builder (`$BUILDPLATFORM`), never under QEMU; see below        |
 | Runtime base                | `node:22-alpine` (override with `--build-arg NODE_IMAGE=…`)                                     |
 | User                        | `node` (uid 1000), never root; app files are root-owned and read-only to it                     |
 | Package managers in runtime | removed (npm, npx, corepack, yarn)                                                              |
@@ -17,6 +18,17 @@ The image runs the MCP server with the **HTTP transport** on port 8080.
 ```bash
 docker build -t apple-search-ads-mcp .
 ```
+
+### Multi-architecture builds
+
+`npm ci` and `tsc` run once on the build machine's own platform (`FROM --platform=$BUILDPLATFORM`), and the
+result is copied into each target platform's runtime image. Node 22 must not run under QEMU emulation: building
+`linux/arm64` on an amd64 CI runner that way crashes with `qemu: uncaught target signal 4 (Illegal instruction)`.
+For the arm64 image, only the runtime stage's shell `rm`/`mkdir` executes under QEMU.
+
+This is only valid while every production dependency is pure JavaScript. `docker/check-pure-js.mjs` runs during the
+build and fails it if a native addon (`*.node`, `binding.gyp`, `gypfile: true`) ever appears; at that point build
+each platform natively instead (for example on arm64 runners).
 
 ## Run
 

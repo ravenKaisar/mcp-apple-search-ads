@@ -7,6 +7,7 @@
 !src/**
 !scripts/postbuild.mjs
 !docker/healthcheck.mjs
+!docker/check-pure-js.mjs
 # Explicitly excluded even if the allow-list above changes:
 config/accounts.json
 **/*.pem

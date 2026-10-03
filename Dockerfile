@@ -9,7 +9,11 @@
 ARG NODE_IMAGE=node:22-alpine
 
 # ---------------------------------------------------------------- build stage
-FROM ${NODE_IMAGE} AS build
+# Runs on the build machine's native platform ($BUILDPLATFORM), never under QEMU: Node 22 crashes when
+# emulated (e.g. arm64 on an amd64 CI runner: "qemu: uncaught target signal 4 (Illegal instruction)").
+# The output is pure JavaScript - enforced by check-pure-js.mjs below - so one build serves every
+# target platform; the runtime stage only copies it onto the target platform's base image.
+FROM --platform=$BUILDPLATFORM ${NODE_IMAGE} AS build
 WORKDIR /build
 ENV npm_config_update_notifier=false npm_config_fund=false npm_config_audit=false
 
@@ -18,10 +22,12 @@ RUN npm ci --ignore-scripts
 
 COPY tsconfig.json tsconfig.build.json ./
 COPY scripts/postbuild.mjs ./scripts/postbuild.mjs
+COPY docker/check-pure-js.mjs ./docker/check-pure-js.mjs
 COPY src ./src
 RUN npm run build \
  && npm prune --omit=dev --ignore-scripts \
- && rm -rf node_modules/.cache
+ && rm -rf node_modules/.cache \
+ && node docker/check-pure-js.mjs node_modules
 
 # ---------------------------------------------------------------- runtime stage
 FROM ${NODE_IMAGE} AS runtime

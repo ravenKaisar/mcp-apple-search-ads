@@ -183,6 +183,17 @@ jobs:
           image="${first_tag%:*}@${DIGEST}"
           docker pull "$image"
           SKIP_BUILD=1 IMAGE="$image" bash scripts/docker-smoke-test.sh
+
+          # Both architectures must be in the manifest list.
+          platforms="$(docker buildx imagetools inspect "$image" | awk '/Platform:/ {print $2}' | sort -u)"
+          echo "$platforms"
+          for platform in linux/amd64 linux/arm64; do
+            grep -qx "$platform" <<<"$platforms" || { echo "::error::$platform missing from $image"; exit 1; }
+          done
+          # arm64 layout check through QEMU using busybox only (Node itself must not run emulated).
+          docker run --rm --platform linux/arm64 --entrypoint /bin/sh "$image" -c \
+            'test -f /app/dist/index.js && test -f /app/node_modules/@modelcontextprotocol/sdk/package.json && test ! -e /usr/local/bin/npm'
+
           {
             echo "### Published image"
             echo
