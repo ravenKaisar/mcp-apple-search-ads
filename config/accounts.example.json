@@ -1,0 +1,35 @@
+{
+  "accounts": [
+    {
+      "id": "production",
+      "name": "Production",
+      "description": "Main Apple Ads organization",
+      "clientId": "SEARCHADS.00000000-0000-0000-0000-000000000000",
+      "teamId": "SEARCHADS.00000000-0000-0000-0000-000000000000",
+      "keyId": "00000000-0000-0000-0000-000000000000",
+      "privateKey": "-----BEGIN EC PRIVATE KEY-----\nREPLACE_WITH_YOUR_P256_PRIVATE_KEY\n-----END EC PRIVATE KEY-----",
+      "orgId": "1234567",
+      "adAccountId": "123456789"
+    },
+    {
+      "id": "staging",
+      "name": "Staging",
+      "clientId": "SEARCHADS.11111111-1111-1111-1111-111111111111",
+      "teamId": "SEARCHADS.11111111-1111-1111-1111-111111111111",
+      "keyId": "11111111-1111-1111-1111-111111111111",
+      "privateKeyPath": "../secrets/staging-private-key.pem",
+      "orgId": "7654321",
+      "apis": ["campaign-management-v5"]
+    },
+    {
+      "id": "agency-client",
+      "name": "Agency client (key from environment)",
+      "clientId": "SEARCHADS.22222222-2222-2222-2222-222222222222",
+      "teamId": "SEARCHADS.22222222-2222-2222-2222-222222222222",
+      "keyId": "22222222-2222-2222-2222-222222222222",
+      "privateKeyEnv": "AGENCY_CLIENT_PRIVATE_KEY",
+      "adAccountId": "987654321",
+      "apis": ["platform-v1"]
+    }
+  ]
+}

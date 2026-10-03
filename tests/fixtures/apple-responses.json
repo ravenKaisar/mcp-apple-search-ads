@@ -1,0 +1,930 @@
+{
+  "$comment": "Realistic 200 responses for every implemented GET endpoint, keyed by MCP tool name. Bodies are based on the example responses in Apple's official documentation, wrapped in each API's documented envelope (v5: {data, pagination, error}; Platform: {result, pagination?}).",
+  "v5_get_user_acl": {
+    "data": [
+      {
+        "orgName": "Trip Trek",
+        "orgId": 40669820,
+        "currency": "USD",
+        "timeZone": "America/Los_Angeles",
+        "paymentModel": "PAYG",
+        "roleNames": ["Admin"],
+        "parentOrgId": 27154130,
+        "displayName": "Trip Trek"
+      }
+    ],
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_me_details": { "data": { "userId": 3962840, "parentOrgId": 27154130 } },
+  "v5_search_apps": {
+    "data": [
+      {
+        "adamId": 427916203,
+        "appName": "Trip Trek example app",
+        "developerName": "example Apple developer",
+        "countryOrRegionCodes": ["FR", "DE", "US", "NO", "MX", "GB", "CA", "SE", "AU"]
+      },
+      {
+        "adamId": 427916204,
+        "appName": "Trip Trek Lite",
+        "developerName": "example Apple developer",
+        "countryOrRegionCodes": ["US"]
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 2 },
+    "error": null
+  },
+  "v5_get_app_details": {
+    "data": {
+      "id": 284815942,
+      "adamId": 284815942,
+      "appName": "Trip Trek",
+      "artistName": "Trip Trek",
+      "primaryLanguage": "en-US",
+      "primaryGenre": ">Mobile Software Applications>Utilities",
+      "secondaryGenre": ">Mobile Software Applications>Reference",
+      "deviceClasses": ["IPHONE", "IPAD"],
+      "iconPictureUrl": "https://is1-ssl.mzstatic.com/image/thumb/example.png",
+      "isPreOrder": "false",
+      "availableStorefronts": ["US"]
+    }
+  },
+  "v5_get_localized_app_details": {
+    "data": [
+      {
+        "language": "en-US",
+        "appName": "Trip Trek",
+        "shortDescription": "Trip Trek app.",
+        "isPrimaryLocale": true,
+        "subTitle": "Search for trips.",
+        "appPreviewDeviceWithAssets": null
+      }
+    ]
+  },
+  "v5_get_campaign": {
+    "data": {
+      "id": 542370642,
+      "orgId": 40669820,
+      "name": "TripTrek campaign 1",
+      "dailyBudgetAmount": { "amount": "500", "currency": "USD" },
+      "adamId": 427916203,
+      "paymentModel": "PAYG",
+      "locInvoiceDetails": null,
+      "budgetOrders": [],
+      "biddingStrategy": "MANUAL_CPT",
+      "targetCpa": null,
+      "displayStatus": "ON_HOLD",
+      "startTime": "2024-04-08T10:33:31.650",
+      "endTime": "2024-04-09T10:33:31.650",
+      "status": "ENABLED",
+      "servingStatus": "NOT_RUNNING",
+      "servingStateReasons": ["CAMPAIGN_END_DATE_REACHED"],
+      "modificationTime": "2024-04-08T11:00:06.513",
+      "deleted": false,
+      "sapinLawResponse": "NOT_ANSWERED",
+      "countriesOrRegions": ["AU", "CA", "GB", "US"],
+      "countryOrRegionServingStateReasons": {},
+      "billingEvent": "TAPS",
+      "supplySources": ["APPSTORE_SEARCH_RESULTS"],
+      "adChannelType": "SEARCH"
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_campaigns": {
+    "data": [
+      { "id": 542370539, "name": "Multicountry campaign example 1", "countriesOrRegions": ["FR"] },
+      { "id": 542370549, "name": "Multicountry campaign example 2", "countriesOrRegions": ["US", "CA"] }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_budget_order": {
+    "data": {
+      "orgIds": [3761812],
+      "bo": {
+        "id": 542370539,
+        "name": "get a budget order example",
+        "startDate": "2024-04-08T00:00:00.000",
+        "endDate": "2024-04-09T23:59:59.999",
+        "budget": { "amount": "2000", "currency": "USD" },
+        "orderNumber": "2376542",
+        "clientName": "Trip Trek",
+        "primaryBuyerName": "Trip Trek",
+        "primaryBuyerEmail": "buyer@triptrek.example",
+        "billingEmail": "billing@triptrek.example",
+        "status": "COMPLETED",
+        "parentOrgId": 27154130,
+        "supplySources": [
+          "APPSTORE_PRODUCT_PAGES_BROWSE",
+          "APPSTORE_SEARCH_RESULTS",
+          "APPSTORE_SEARCH_TAB",
+          "APPSTORE_TODAY_TAB"
+        ]
+      }
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_budget_orders": {
+    "data": [
+      {
+        "orgIds": [3761812],
+        "bo": {
+          "id": 542370539,
+          "name": "get all budget orders example",
+          "startDate": "2024-04-08T00:00:00.000",
+          "endDate": "2024-04-09T23:59:59.999",
+          "budget": { "amount": "2000", "currency": "USD" },
+          "orderNumber": "2376542",
+          "clientName": "Trip Trek",
+          "status": "COMPLETED",
+          "parentOrgId": 27154130,
+          "supplySources": ["APPSTORE_SEARCH_RESULTS", "APPSTORE_PRODUCT_PAGES_BROWSE"]
+        }
+      }
+    ],
+    "pagination": { "totalResults": 1, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_ad_group": {
+    "data": {
+      "id": 542370539,
+      "campaignId": 56543219,
+      "name": "ad group name example",
+      "cpaGoal": { "amount": "100", "currency": "USD" },
+      "startTime": "2025-04-08T12:00:22.788",
+      "endTime": "2025-04-09T12:00:22.788",
+      "automatedKeywordsOptIn": false,
+      "defaultBidAmount": { "amount": "100", "currency": "USD" },
+      "pricingModel": "CPC",
+      "targetingDimensions": {
+        "age": { "included": [{ "minAge": 20, "maxAge": 25 }] },
+        "gender": { "included": ["M", "F"] },
+        "country": null,
+        "adminArea": null,
+        "locality": null,
+        "deviceClass": { "included": ["IPAD", "IPHONE"] },
+        "daypart": { "userTime": { "included": [1, 3, 22] } },
+        "appDownloaders": null
+      },
+      "orgId": 40669820,
+      "modificationTime": "2025-04-08T19:00:24.105",
+      "status": "ENABLED",
+      "servingStatus": "RUNNING",
+      "servingStateReasons": null,
+      "displayStatus": "RUNNING",
+      "deleted": false
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_ad_groups": {
+    "data": [
+      {
+        "id": 542370539,
+        "campaignId": 56543219,
+        "name": "ad group 1",
+        "status": "ENABLED",
+        "pricingModel": "CPC"
+      },
+      {
+        "id": 542370540,
+        "campaignId": 56543219,
+        "name": "ad group 2",
+        "status": "PAUSED",
+        "pricingModel": "CPC"
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_targeting_keyword": {
+    "data": {
+      "id": 542370642,
+      "adGroupId": 427916203,
+      "text": "targeting keyword example 1",
+      "status": "ACTIVE",
+      "matchType": "BROAD",
+      "bidAmount": { "amount": "100", "currency": "USD" },
+      "modificationTime": "2025-04-08T20:48:28.206",
+      "deleted": false
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_targeting_keywords": {
+    "data": [
+      {
+        "id": 542370642,
+        "adGroupId": 542317095,
+        "text": "targeting keyword example 1",
+        "status": "ACTIVE",
+        "matchType": "BROAD",
+        "bidAmount": { "amount": "100", "currency": "USD" },
+        "modificationTime": "2024-04-08T16:53:17.457",
+        "deleted": false
+      },
+      {
+        "id": 542370643,
+        "adGroupId": 542317095,
+        "text": "targeting keyword example 2",
+        "status": "ACTIVE",
+        "matchType": "BROAD",
+        "bidAmount": { "amount": "100", "currency": "USD" },
+        "modificationTime": "2024-04-08T20:48:28.206",
+        "deleted": false
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_campaign_negative_keyword": {
+    "data": {
+      "id": 542370642,
+      "campaignId": 542370539,
+      "adGroupId": null,
+      "text": "Get campaign negative keywords example",
+      "status": "ACTIVE",
+      "matchType": "BROAD",
+      "modificationTime": "2024-04-08T17:48:31.979",
+      "deleted": false
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_campaign_negative_keywords": {
+    "data": [
+      {
+        "id": 542370642,
+        "campaignId": 542370539,
+        "text": "Get campaign negative keyword example 1",
+        "status": "ACTIVE",
+        "matchType": "BROAD",
+        "modificationTime": "2024-04-08T17:48:31.979",
+        "deleted": false
+      },
+      {
+        "id": 542370643,
+        "campaignId": 542370539,
+        "text": "Get campaign negative keyword example 2",
+        "status": "ACTIVE",
+        "matchType": "EXACT",
+        "modificationTime": "2024-04-08T17:48:31.984",
+        "deleted": false
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_ad_group_negative_keyword": {
+    "data": {
+      "id": 542370642,
+      "campaignId": 542370539,
+      "adGroupId": 427916203,
+      "text": "ad group negative keyword example 1",
+      "status": "ACTIVE",
+      "matchType": "EXACT",
+      "modificationTime": "2024-04-08T17:49:30.399",
+      "deleted": false
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_ad_group_negative_keywords": {
+    "data": [
+      {
+        "id": 542370642,
+        "campaignId": 542370539,
+        "adGroupId": 427916203,
+        "text": "Get ad group negative keyword example 1",
+        "status": "ACTIVE",
+        "matchType": "BROAD",
+        "modificationTime": "2023-04-08T17:49:30.393",
+        "deleted": false
+      },
+      {
+        "id": 542370643,
+        "campaignId": 542370539,
+        "adGroupId": 427916203,
+        "text": "Get ad group negative keyword example 2",
+        "status": "ACTIVE",
+        "matchType": "EXACT",
+        "modificationTime": "2023-04-08T17:49:30.399",
+        "deleted": false
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_search_geolocations": {
+    "data": [
+      {
+        "id": "US|CA",
+        "entity": "AdminArea",
+        "displayName": "California, United States",
+        "countryOrRegion": "US",
+        "adminArea": "CA",
+        "locality": null
+      },
+      {
+        "id": "US|CO",
+        "entity": "AdminArea",
+        "displayName": "Colorado, United States",
+        "countryOrRegion": "US",
+        "adminArea": "CO",
+        "locality": null
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_ad": {
+    "data": {
+      "id": 573408745,
+      "orgId": 39872140,
+      "campaignId": 570798765,
+      "adGroupId": 570798765,
+      "creativeId": 94895512,
+      "name": "Trip Trek custom product page variation",
+      "creativeType": "CUSTOM_PRODUCT_PAGE",
+      "status": "PAUSED",
+      "servingStatus": "NOT_RUNNING",
+      "servingStateReasons": ["PAUSED_BY_USER"],
+      "deleted": false,
+      "creationTime": "2024-10-08T00:18:37.606Z",
+      "modificationTime": "2024-10-09T00:18:37.606Z"
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_ads": {
+    "data": [
+      {
+        "id": 573408745,
+        "orgId": 39872140,
+        "campaignId": 570798765,
+        "adGroupId": 570798765,
+        "creativeId": 94895512,
+        "name": "Trip Trek custom product page variation",
+        "creativeType": "CUSTOM_PRODUCT_PAGE",
+        "status": "PAUSED",
+        "servingStatus": "NOT_RUNNING",
+        "servingStateReasons": ["PAUSED_BY_USER"],
+        "deleted": false
+      }
+    ],
+    "pagination": { "totalResults": 1, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_ad_creative_rejection_reason": {
+    "data": {
+      "id": "135366",
+      "adamId": 735599345,
+      "productPageId": "68e5948c-3726-4cfc-8915-6b09afb36d83",
+      "assetGenId": "735599345;en-US;9;0;4201c5a4bd4087cc82xdfetdc8141b94d0",
+      "supplySource": "APPSTORE_TODAY_TAB",
+      "countryOrRegion": "US",
+      "languageCode": "en-US",
+      "reasonType": "APP_NAME_LANGUAGE_CONFLICT",
+      "reasonCode": "SUBTITLE_LANGUAGE_CONFLICT",
+      "comment": null
+    }
+  },
+  "v5_get_creative": {
+    "data": {
+      "id": 94790778,
+      "orgId": 42173330,
+      "adamId": 918469737,
+      "name": "Trip Trek CPP variation 1",
+      "type": "CUSTOM_PRODUCT_PAGE",
+      "state": "VALID",
+      "stateReasons": [],
+      "creationTime": "2024-11-08T21:53:35.036",
+      "modificationTime": "2024-09-04T21:53:35.036",
+      "productPageId": "00d99d1e-ee93-48fc-973e-7ffc0ddfced6"
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_creatives": {
+    "data": [
+      {
+        "id": 94790778,
+        "orgId": 42173330,
+        "adamId": 918469737,
+        "name": "Trip Trek CPP variation 1",
+        "type": "CUSTOM_PRODUCT_PAGE",
+        "state": "VALID",
+        "stateReasons": [],
+        "productPageId": "00d99d1e-ee93-48fc-973e-7ffc0ddfced6"
+      }
+    ],
+    "pagination": { "totalResults": 1, "startIndex": 0, "itemsPerPage": 20 },
+    "error": null
+  },
+  "v5_get_product_pages": {
+    "data": [
+      {
+        "id": "45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+        "name": "Trip Trek CPP variation 1",
+        "state": "VISIBLE",
+        "adamId": 899247964,
+        "deepLink": "https://apps.apple.com/us/app/id899247964?ppid=45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+        "creationTime": "2024-10-25T23:59:59.000",
+        "modificationTime": "2024-10-08T17:44:49.718Z"
+      }
+    ]
+  },
+  "v5_get_product_page": {
+    "data": {
+      "id": "45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+      "name": "Trip Trek CPP variation",
+      "state": "VISIBLE",
+      "adamId": 899247964,
+      "creationTime": "2024-10-25T23:59:59.000",
+      "modificationTime": "2024-10-25T23:59:59.000"
+    }
+  },
+  "v5_get_product_page_locales": {
+    "data": [
+      {
+        "adamId": 1408851466,
+        "productPageId": "45812c9b-c296-43d3-c6a0-c5a02f74bf6e",
+        "language": "en",
+        "appName": "Trip Trek",
+        "languageCode": "en-US",
+        "subTitle": "Updated for iOS 15",
+        "promotionalText": "The best travel app for iOS.",
+        "shortDescription": "A cartographic dashboard to track your awesome treks.",
+        "deviceClasses": ["IPHONE"]
+      }
+    ]
+  },
+  "v5_get_supported_countries_or_regions": {
+    "data": [
+      {
+        "countryOrRegion": "US",
+        "supportedLanguages": [
+          { "language": "en", "languageCode": "en-US" },
+          { "language": "es", "languageCode": "es-MX" }
+        ],
+        "defaultLanguage": { "language": "en", "languageCode": "en-US" }
+      }
+    ]
+  },
+  "v5_get_app_preview_device_sizes": {
+    "data": {
+      "ipadPro": "iPad 12.9",
+      "iphone6+": "iPhone 5.5",
+      "iphone_5_8": "iPhone 5.8",
+      "iphone5": "iPhone 4",
+      "iphone6": "iPhone 4.7",
+      "ipadPro_2018": "iPad 11",
+      "ipad": "iPad 9.7",
+      "iphone_6_5": "iPhone 6.5",
+      "ipad_10_5": "iPad 10.5"
+    }
+  },
+  "v5_get_impression_share_report": {
+    "data": {
+      "id": 7615231,
+      "name": "impression_share_API_report_example_2",
+      "startTime": "2024-06-01",
+      "endTime": "2024-06-30",
+      "granularity": "DAILY",
+      "downloadUri": "https://ads-reports.example.amazonaws.com/ext-sov-reports/report.csv",
+      "dimensions": ["appName", "adamId", "countryOrRegion", "searchTerm"],
+      "metrics": ["lowImpressionShare", "highImpressionShare", "rank", "searchPopularity"],
+      "selector": {
+        "conditions": [
+          { "field": "adamId", "operator": "IN", "values": ["1252497129", "282614216"] },
+          { "field": "countryOrRegion", "operator": "IN", "values": ["US", "AU"] }
+        ]
+      },
+      "state": "COMPLETED",
+      "creationTime": "2024-02-07T09:14:46.235",
+      "modificationTime": "2024-02-07T09:14:53.173",
+      "dateRange": "LAST_2_WEEKS"
+    },
+    "pagination": null,
+    "error": null
+  },
+  "v5_get_all_impression_share_reports": {
+    "data": [
+      {
+        "id": 965992,
+        "name": "impression_share_report_example_3",
+        "startTime": "2024-10-14",
+        "endTime": "2024-11-12",
+        "granularity": "DAILY",
+        "state": "COMPLETED",
+        "creationTime": "2024-02-07T09:23:03.532",
+        "modificationTime": "2024-02-07T09:23:09.774",
+        "dateRange": "LAST_2_WEEKS"
+      },
+      {
+        "id": 965993,
+        "name": "impression_share_report_example_4",
+        "startTime": "2024-10-14",
+        "endTime": "2024-11-12",
+        "granularity": "WEEKLY",
+        "state": "QUEUED",
+        "creationTime": "2024-02-08T09:23:03.532",
+        "modificationTime": "2024-02-08T09:23:09.774",
+        "dateRange": "LAST_4_WEEKS"
+      }
+    ],
+    "pagination": { "totalResults": 2, "startIndex": 0, "itemsPerPage": 2 },
+    "error": null
+  },
+  "platform_get_me": { "result": { "userId": 3962840, "orgId": 27154130 } },
+  "platform_get_user_acls": {
+    "result": {
+      "acls": [
+        { "adAccount": { "id": 123456789, "name": "AwayFinder", "orgId": 40669820 }, "roles": ["Admin"] }
+      ]
+    }
+  },
+  "platform_get_org": {
+    "result": {
+      "id": 987654321,
+      "name": "AwayFinder",
+      "currency": "USD",
+      "timezone": "America/New_York",
+      "paymentModel": "PAYG",
+      "systemStatus": "ACTIVE",
+      "systemStatusReasons": []
+    }
+  },
+  "platform_get_ad_account": {
+    "result": {
+      "id": 123456789,
+      "name": "AwayFinder Ad Account",
+      "orgId": 987654321,
+      "timezone": "America/New_York",
+      "currency": "USD",
+      "paymentModel": "PAYG",
+      "systemStatus": "ACTIVE",
+      "systemStatusReasons": [],
+      "productFeatures": ["APPSTORE_APP_MANUAL"],
+      "delegations": [
+        { "resourceId": "12345678", "resourceType": "CONTENT_PROVIDER", "resourceName": "AwayFinder Apps" }
+      ],
+      "creationTime": "2025-01-10T08:00:00.000",
+      "modificationTime": "2025-01-10T08:00:00.000"
+    }
+  },
+  "platform_get_advertiser_resources": {
+    "result": [
+      { "resourceId": "987654321", "resourceType": "CONTENT_PROVIDER", "resourceName": "AwayFinder" }
+    ]
+  },
+  "platform_search_apps": {
+    "result": [
+      {
+        "adamId": 123456789,
+        "appName": "AwayFinder",
+        "developerName": "AwayFinder Inc.",
+        "countryOrRegionCodes": ["US", "GB", "CA", "AU"]
+      },
+      {
+        "adamId": 123456790,
+        "appName": "AwayFinder Pro",
+        "developerName": "AwayFinder Inc.",
+        "countryOrRegionCodes": ["US"]
+      }
+    ],
+    "pagination": { "totalCount": 2, "offset": 0, "pageSize": 2 }
+  },
+  "platform_get_app_details": {
+    "result": {
+      "id": "324684580",
+      "appName": "My Productivity App",
+      "artistName": "My Developer",
+      "primaryLanguage": "en-US",
+      "primaryGenre": "Productivity",
+      "secondaryGenre": "Travel",
+      "deviceClasses": ["IPHONE", "IPAD"],
+      "iconPictureUrl": "https://is1-ssl.mzstatic.com/image/thumb/Purple/v4/example.jpg",
+      "isPreorder": false,
+      "availableStorefronts": ["US", "GB", "CA"]
+    }
+  },
+  "platform_get_app_rejection_reason": {
+    "result": {
+      "id": 112233445,
+      "adamId": 123456789,
+      "creativeId": 456789,
+      "productPageId": "1a2b3c4d-0001",
+      "assetId": null,
+      "supplySource": "APPSTORE",
+      "supplyPlacement": "APPSTORE_SEARCH_RESULTS",
+      "countryOrRegion": "US",
+      "languageCode": "en-US",
+      "reasonType": "REJECTION_REASON",
+      "reasonCode": "APP_NOT_ELIGIBLE",
+      "comment": null,
+      "reasonLevel": "CUSTOM_PRODUCT_PAGE_LOCALE",
+      "creationTime": "2026-02-05T08:30:00.000",
+      "modificationTime": "2026-03-05T08:30:00.000"
+    }
+  },
+  "platform_get_brand": {
+    "result": {
+      "id": "9151314442816847872",
+      "name": "AwayFinder",
+      "countryOrRegion": "US",
+      "categories": ["dining.restaurant"],
+      "eligibility": { "status": "ELIGIBLE" }
+    }
+  },
+  "platform_get_business_category": {
+    "result": {
+      "id": "cat-din-001",
+      "name": "Restaurant",
+      "qualifiedId": "dining.restaurant",
+      "creationTime": "2024-06-01T00:00:00Z",
+      "modificationTime": "2024-06-01T00:00:00Z",
+      "eligibility": { "status": "ELIGIBLE", "blockedGroups": [], "allowedGroups": [] }
+    }
+  },
+  "platform_get_location_group": {
+    "result": {
+      "id": "5764607523034238976",
+      "name": "AwayFinder West Coast Stores",
+      "brandId": "9151314442816847872",
+      "adAccountId": "293897290",
+      "groupType": "DYNAMIC",
+      "systemStatus": "VALID",
+      "rules": [{ "field": "adminArea", "operator": "IN", "value": ["California", "Oregon", "Washington"] }],
+      "groupTotal": 42,
+      "isAllLocationsGroup": false,
+      "description": "All AwayFinder locations on the West Coast",
+      "creationTime": "2026-02-01T09:00:00Z",
+      "modificationTime": "2026-03-25T16:00:00Z",
+      "eligibility": { "status": "ELIGIBLE" }
+    }
+  },
+  "platform_get_location": {
+    "result": {
+      "id": "7205759403792794",
+      "name": "AwayFinder - Downtown SF",
+      "brandId": "9151314442816847872",
+      "status": "OPEN",
+      "countryOrRegion": "US",
+      "categories": ["travel", "tourism"],
+      "address": {
+        "subThoroughfare": "123",
+        "thoroughfare": "Market Street",
+        "locality": "San Francisco",
+        "adminArea": "California",
+        "postalCode": "94105",
+        "countryOrRegion": "US",
+        "fullThoroughfare": "123 Market Street",
+        "fullAddress": "123 Market Street, San Francisco, California 94105, US"
+      },
+      "displayPoint": { "latitude": "37.7749", "longitude": "-122.4194" },
+      "creationTime": "2025-01-15T10:00:00Z",
+      "modificationTime": "2026-03-20T14:45:00Z",
+      "eligibility": { "status": "ELIGIBLE" }
+    }
+  },
+  "platform_get_campaign": {
+    "result": {
+      "id": 444555681,
+      "name": "AwayFinder App Campaign",
+      "adAccountId": 123456789,
+      "promotedObjectType": "APPSTORE_APP",
+      "promotedObjectId": "123456789",
+      "status": "ENABLED",
+      "billingEvent": "TAPS",
+      "startTime": "2025-09-01T00:00:00.000",
+      "endTime": "2025-12-31T23:59:59.000",
+      "dailyBudget": { "value": { "amount": "100.00", "currency": "USD" } },
+      "targeting": {
+        "countryOrRegion": { "include": ["US"] },
+        "supplyPlacement": { "include": ["APPSTORE_SEARCH_RESULTS"] }
+      },
+      "bidStrategy": { "bidStrategyType": "MAX_CONVERSIONS", "bidStrategyGoal": "INSTALL" },
+      "regulationResponses": [{ "regulationType": "CAMPAIGN_SAPIN_LAW", "responseValue": "NOT_AGENT" }],
+      "creationTime": "2025-01-10T08:00:00.000",
+      "modificationTime": "2025-01-10T08:00:00.000",
+      "deleted": false,
+      "paymentModel": "PAYG",
+      "systemStatus": "RUNNING",
+      "systemStatusReasons": [],
+      "systemStatusLimitingReasons": [],
+      "displayStatus": "RUNNING"
+    }
+  },
+  "platform_get_campaign_legacy_app_limited_status_reasons": {
+    "result": {
+      "countryOrRegionLimitedStatusReasons": {
+        "US": ["APP_NOT_ELIGIBLE_SUPPLY_PLACEMENT", "APP_NOT_PUBLISHED_YET"],
+        "GB": ["APP_NOT_PUBLISHED_YET"],
+        "AU": []
+      }
+    }
+  },
+  "platform_get_ad_group": {
+    "result": {
+      "id": 555666777,
+      "name": "AwayFinder iOS - New Users 18-34",
+      "adAccountId": 123456789,
+      "campaignId": 444555666,
+      "pricingModel": "CPT",
+      "status": "ENABLED",
+      "systemStatus": "RUNNING",
+      "displayStatus": "RUNNING",
+      "startTime": "2025-09-01T00:00:00.000",
+      "endTime": "2025-12-31T23:59:59.000",
+      "targeting": {
+        "deviceClass": { "include": ["IPHONE"] },
+        "minAge": { "include": ["18"] },
+        "maxAge": { "include": ["34"] },
+        "appDownloader": { "include": ["123456789"] }
+      },
+      "automatedKeywordsOptIn": false,
+      "deleted": false,
+      "creationTime": "2025-01-10T08:00:00.000",
+      "modificationTime": "2025-01-10T08:00:00.000"
+    }
+  },
+  "platform_search_geo_locations": {
+    "result": [
+      {
+        "id": "11390462",
+        "legacyId": "US|CA|San Francisco",
+        "entity": "Locality",
+        "displayName": "San Francisco, California, United States",
+        "countryOrRegion": "US",
+        "adminArea": "CA",
+        "locality": "San Francisco"
+      },
+      {
+        "id": "11390475",
+        "legacyId": "US|CA|South San Francisco",
+        "entity": "Locality",
+        "displayName": "South San Francisco, California, United States",
+        "countryOrRegion": "US",
+        "adminArea": "CA",
+        "locality": "South San Francisco"
+      }
+    ],
+    "pagination": { "totalCount": 2, "offset": 0, "pageSize": 20 }
+  },
+  "platform_get_keyword": {
+    "result": {
+      "id": 888999000,
+      "adAccountId": 123456789,
+      "campaignId": 444555666,
+      "adGroupId": 555666777,
+      "text": "photo editor",
+      "matchType": "EXACT",
+      "bid": { "amount": "2.50", "currency": "USD" },
+      "status": "ENABLED",
+      "displayStatus": "RUNNING",
+      "deleted": false,
+      "creationTime": "2025-01-10T08:00:00.000",
+      "modificationTime": "2025-01-10T08:00:00.000"
+    }
+  },
+  "platform_get_negative_keyword": {
+    "result": {
+      "id": 777888999,
+      "adAccountId": 123456789,
+      "campaignId": 444555666,
+      "text": "free app",
+      "matchType": "BROAD",
+      "status": "ENABLED",
+      "deleted": false,
+      "creationTime": "2025-01-10T08:00:00.000",
+      "modificationTime": "2025-01-10T08:00:00.000"
+    }
+  },
+  "platform_get_ad": {
+    "result": {
+      "id": 777888999,
+      "adAccountId": 123456789,
+      "campaignId": 444555666,
+      "adGroupId": 555666777,
+      "creativeId": 666777888,
+      "name": "AwayFinder - Default Product Page",
+      "status": "ENABLED",
+      "systemStatus": "RUNNING",
+      "systemStatusReasons": [],
+      "systemStatusLimitingReasons": [],
+      "displayStatus": "RUNNING",
+      "deleted": false,
+      "creationTime": "2025-09-01T08:00:00.000",
+      "modificationTime": "2025-09-01T08:00:00.000"
+    }
+  },
+  "platform_get_creative": {
+    "result": {
+      "id": 666777888,
+      "adAccountId": 123456789,
+      "name": "AwayFinder - Summer Campaign Creative",
+      "creativeType": "CUSTOM_PRODUCT_PAGE",
+      "creativeSpec": {},
+      "destination": {
+        "destinationType": "APP_STORE_PRODUCT_PAGE",
+        "parameters": { "adamId": "987654321", "productPageId": "76659d7a-d146-43d3-b6b8-b7a12f74bf6b" },
+        "url": "https://apps.apple.com/us/app/id/987654321"
+      },
+      "systemStatus": "VALID",
+      "systemStatusReasons": [],
+      "eligibility": {
+        "status": "ELIGIBLE",
+        "allowedGroups": [{ "supplyPlacement": ["APPSTORE_SEARCH_RESULTS"], "countryOrRegion": ["US"] }],
+        "blockedGroups": []
+      },
+      "deleted": false,
+      "creationTime": "2025-06-01T10:00:00.000",
+      "modificationTime": "2025-06-01T10:00:00.000"
+    }
+  },
+  "platform_get_asset": {
+    "result": {
+      "id": "770e8400-e29b-41d4-a716-446655440002",
+      "name": "awayfinder_hero.png",
+      "assetType": "IMAGE",
+      "providerAssetId": "abc123-provider-id",
+      "promotedObjectId": "987654321",
+      "promotedObjectType": "BUSINESS_BRAND",
+      "providerAssetMetadata": {},
+      "assetDetails": {
+        "width": 1920,
+        "height": 1080,
+        "format": "PNG",
+        "sizeBytes": 2097152,
+        "orientation": "LANDSCAPE"
+      },
+      "parentAssetId": null,
+      "variantIds": [],
+      "creationTime": "2026-03-01T12:00:00.000",
+      "modificationTime": "2026-03-01T12:00:00.000",
+      "eligibility": { "status": "ELIGIBLE", "blockedGroups": [], "allowedGroups": [] }
+    }
+  },
+  "platform_get_product_page": {
+    "result": {
+      "id": "133fc807-d4d5-4c77-92ae-1d6ffdf0c7dc",
+      "adamId": 123456789,
+      "name": "AwayFinder - Holiday Season CPP",
+      "state": "PUBLISHED",
+      "deepLink": "https://apps.apple.com/us/app/my-productivity-app/id123456789?ppid=133fc807-d4d5-4c77-92ae-1d6ffdf0c7dc",
+      "creationTime": "2025-04-10T08:00:00.000",
+      "modificationTime": "2025-05-01T14:30:00.000"
+    }
+  },
+  "platform_get_budget_order": {
+    "result": {
+      "id": 777888999,
+      "orgId": 100456789,
+      "name": "AwayFinder - Q1 2025 Budget",
+      "startTime": "2025-01-01T00:00:00.000",
+      "endTime": "2025-03-31T23:59:59.000",
+      "value": { "amount": "10000.00", "currency": "USD" },
+      "adAccountIds": [123456789],
+      "systemStatus": "ACTIVE",
+      "systemStatusReasons": [],
+      "invoiceDetail": {
+        "primaryBuyerName": "Jane Smith",
+        "primaryBuyerEmail": "jane.smith@awayfinder.example",
+        "billingEmail": "billing@awayfinder.example"
+      },
+      "deleted": false,
+      "creationTime": "2025-01-01T00:00:00.000",
+      "modificationTime": "2025-01-01T00:00:00.000"
+    }
+  },
+  "platform_get_change_history_detail": {
+    "dataType": "ChangeDetail",
+    "pagination": { "offset": 0, "pageSize": 1, "totalCount": 1 },
+    "result": [
+      {
+        "transactionId": "txn_abc123def456",
+        "detailId": "Campaign.444555666.txn_abc123def456",
+        "eventType": "UPDATE",
+        "entityType": "Campaign",
+        "entityId": "444555666",
+        "eventTime": "2025-03-15T14:30:00.000Z",
+        "userType": "CUSTOMER_API",
+        "modifiedBy": "555666777",
+        "entityMetaData": { "name": "AwayFinder - Summer App Promo" },
+        "details": [
+          {
+            "transactionId": "txn_abc123def456",
+            "changes": [
+              { "field": "status", "oldValues": ["PAUSED"], "newValues": ["ENABLED"] },
+              { "field": "dailyBudget", "oldValues": ["50.00"], "newValues": ["100.00"] }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

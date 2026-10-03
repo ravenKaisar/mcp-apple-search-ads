@@ -1,0 +1,44 @@
+# Runs the MCP server over HTTP on port 8080.
+#   1. cp config/accounts.example.json config/accounts.json  (fill in real values; chmod 640)
+#   2. export MCP_AUTH_TOKEN=$(openssl rand -hex 32)
+#   3. docker compose up -d --build
+# To run the image published by CI instead of building locally:
+#   APP_IMAGE=ghcr.io/<owner>/<repo>:latest docker compose pull && APP_IMAGE=... docker compose up -d --no-build
+services:
+  apple-search-ads-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ${APP_IMAGE:-apple-search-ads-mcp:latest}
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: '8080'
+      HOST: 0.0.0.0
+      ACCOUNTS_CONFIG: /app/config/accounts.json
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      REQUEST_TIMEOUT: ${REQUEST_TIMEOUT:-30000}
+      ENABLED_APIS: ${ENABLED_APIS:-campaign-management-v5,platform-v1}
+      # Required for anything reachable beyond localhost; clients send "Authorization: Bearer <token>".
+      MCP_AUTH_TOKEN: ${MCP_AUTH_TOKEN:?set MCP_AUTH_TOKEN to a long random value}
+    volumes:
+      # Credentials are mounted read-only at runtime and never baked into the image.
+      - ./config/accounts.json:/app/config/accounts.json:ro
+      # If accounts.json uses privateKeyPath, mount the key directory too, e.g.:
+      # - ./secrets:/app/secrets:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    # The image defines a HEALTHCHECK (GET /health); compose surfaces it as the service health.
+
+  # Alternative: Docker/Swarm secrets instead of a bind mount
+  #   secrets: [accounts]
+  #   environment: { ACCOUNTS_CONFIG: /run/secrets/accounts }
+# secrets:
+#   accounts:
+#     file: ./config/accounts.json

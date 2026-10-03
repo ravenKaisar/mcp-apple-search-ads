@@ -1,0 +1,3060 @@
+{
+  "$comment": "Machine-readable inventory of the Apple Search Ads / Apple Ads APIs. 'endpoints' lists every GET endpoint (all implemented); 'excluded' lists every non-GET endpoint that is intentionally not implemented. tests/unit/api-coverage.test.ts cross-checks this file against src/apple-search-ads/endpoints. Regenerate docs/API-COVERAGE.md with `npm run docs:coverage`.",
+  "source": "Apple official documentation (developer.apple.com/documentation/apple_ads and /apple-ads-platform-api), reviewed 2026-10-03",
+  "policy": {
+    "implementedMethods": ["GET"],
+    "excludedMethods": ["POST", "PUT", "PATCH", "DELETE"],
+    "statement": "This MCP server only supports Apple Search Ads GET APIs. Report-generation APIs and other endpoints requiring POST are intentionally excluded, even when they only read data."
+  },
+  "apis": {
+    "campaign-management-v5": {
+      "name": "Apple Search Ads Campaign Management API (Apple Ads Campaign Management API)",
+      "version": "5 (changelog through 5.6, June 2026)",
+      "status": "Deprecated by Apple; sunset on 2027-01-26 in favour of the Apple Ads Platform API",
+      "baseUrl": "https://api.searchads.apple.com/api/v5",
+      "docs": "https://developer.apple.com/documentation/apple_ads",
+      "authentication": "OAuth 2.0 client credentials: ES256 client-secret JWT (iss=teamId, sub=clientId, aud=https://appleid.apple.com, exp<=iat+180d, kid=keyId) exchanged at POST https://appleid.apple.com/auth/oauth2/token (scope=searchadsorg) for a 1-hour Bearer token",
+      "headers": {
+        "Authorization": "Bearer {access_token}",
+        "X-AP-Context": "orgId={orgId} - required on every endpoint except GET /acls and GET /me"
+      },
+      "responseEnvelope": "{ data, pagination: { totalResults, startIndex, itemsPerPage } | null, error: { errors: [ { messageCode, message, field } ] } | null }",
+      "pagination": "GET list endpoints take limit (default 20, max 1000 for most objects) and offset (default 0) query parameters",
+      "errors": "400, 401, 403, 404, 429, 500 return ApiErrorResponse { error: { errors: [ErrorResponseItem] } }",
+      "rateLimits": "No numeric limits published; 429 when exceeded; Apple recommends exponential backoff (2s, 4s, 8s, 16s cap)"
+    },
+    "platform-v1": {
+      "name": "Apple Ads Platform API",
+      "version": "1.0 (released August 2026)",
+      "status": "Current",
+      "baseUrl": "https://api.ads.apple.com/v1",
+      "docs": "https://developer.apple.com/documentation/apple-ads-platform-api",
+      "authentication": "Same OAuth 2.0 client-credentials flow as v5 (scope=searchadsorg, 1-hour Bearer token)",
+      "headers": {
+        "Authorization": "Bearer {access_token}",
+        "X-AP-Context": "adAccountId={adAccountId} - required except Get User ACLs, Get Me, Get Org by ID, Get Advertiser Resources (and POST /ad-accounts)"
+      },
+      "responseEnvelope": "{ result, pagination?: { offset, pageSize, totalCount }, error?: { code, message, details: [ { code, message } ] } }",
+      "pagination": "Most list reads are POST /query with body pagination; the GET search endpoints take offset + limit/pageSize query parameters",
+      "errors": "400 bad_request, 401 unauthorized, 403 forbidden, 404 not_found, 429 rate_limit_exceeded, 500 internal_server_error",
+      "rateLimits": "RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset (seconds) on every response; 429 includes Retry-After (seconds); exponential backoff up to 16s"
+    }
+  },
+  "summary": {
+    "getEndpoints": 54,
+    "getEndpointsByApi": {
+      "campaign-management-v5": 30,
+      "platform-v1": 24
+    },
+    "excludedEndpoints": 120,
+    "excludedByReason": {
+      "mutation": 60,
+      "read-via-post": 42,
+      "report-generation-via-post": 17,
+      "async-report-job-creation": 1
+    }
+  },
+  "endpoints": [
+    {
+      "id": "v5.getUserAcl",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "User Access",
+      "title": "Get User ACL",
+      "method": "GET",
+      "path": "/acls",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "UserAclListResponse {data:[UserAcl], pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-user-acl",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_user_acl",
+      "requiredParams": [],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getMeDetails",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "User Access",
+      "title": "Get Me Details",
+      "method": "GET",
+      "path": "/me",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "MeDetailResponse {data: MeDetail}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-me-details",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_me_details",
+      "requiredParams": [],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.searchApps",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Apps",
+      "title": "Search for iOS Apps",
+      "method": "GET",
+      "path": "/search/apps",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": true,
+          "note": "prefix match, min 3 characters"
+        },
+        {
+          "name": "returnOwnedApps",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AppInfoListResponse {data:[AppInfo], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/search-for-ios-apps",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_search_apps",
+      "requiredParams": ["query"],
+      "optionalParams": ["returnOwnedApps", "limit", "offset"]
+    },
+    {
+      "id": "v5.getAppDetails",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "App Details",
+      "title": "Get App Details",
+      "method": "GET",
+      "path": "/apps/{adamId}",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "MediaDetailResponse {data: MediaDetail}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-app-details",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_app_details",
+      "notes": ["Added in 5.2"],
+      "requiredParams": ["adamId"],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getLocalizedAppDetails",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "App Details",
+      "title": "Get Localized App Details",
+      "method": "GET",
+      "path": "/apps/{adamId}/locale-details",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "expand",
+          "type": "boolean",
+          "required": false,
+          "note": "documented in the page discussion"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "MediaLocaleDetailResponse {data:[MediaLocaleDetail]}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-localized-app-details",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_localized_app_details",
+      "notes": ["Added in 5.2"],
+      "requiredParams": ["adamId"],
+      "optionalParams": ["expand"]
+    },
+    {
+      "id": "v5.getCampaign",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Campaigns",
+      "title": "Get a Campaign",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CampaignResponse {data: Campaign, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-campaign",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_campaign",
+      "requiredParams": ["campaignId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllCampaigns",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Campaigns",
+      "title": "Get all Campaigns",
+      "method": "GET",
+      "path": "/campaigns",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CampaignListResponse {data:[Campaign], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-campaigns",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_campaigns",
+      "requiredParams": [],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getBudgetOrder",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Budget Orders",
+      "title": "Get a Budget Order",
+      "method": "GET",
+      "path": "/budgetorders/{boId}",
+      "pathParams": [
+        {
+          "name": "boId",
+          "type": "int64",
+          "required": true,
+          "description": "Budget order identifier"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "BudgetOrderInfoResponse {data: {orgIds, bo: BudgetOrder}, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-budget-order",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_budget_order",
+      "requiredParams": ["boId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllBudgetOrders",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Budget Orders",
+      "title": "Get all Budget Orders",
+      "method": "GET",
+      "path": "/budgetorders",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "BudgetOrderInfoListResponse {data:[BudgetOrderInfo], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-budget-orders",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_budget_orders",
+      "requiredParams": [],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getAdGroup",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ad Groups",
+      "title": "Get an Ad Group",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdGroupResponse {data: AdGroup, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-an-ad-group",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_ad_group",
+      "requiredParams": ["campaignId", "adgroupId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllAdGroups",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ad Groups",
+      "title": "Get all Ad Groups",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdGroupListResponse {data:[AdGroup], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-ad-groups",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_ad_groups",
+      "requiredParams": ["campaignId"],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getTargetingKeyword",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Targeting Keywords",
+      "title": "Get a Targeting Keyword in an Ad Group",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/{keywordId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        },
+        {
+          "name": "keywordId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "KeywordResponse {data: Keyword, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-targeting-keyword-in-an-ad-group",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_targeting_keyword",
+      "requiredParams": ["campaignId", "adgroupId", "keywordId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllTargetingKeywords",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Targeting Keywords",
+      "title": "Get All Targeting Keywords in an Ad Group",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "KeywordListResponse {data:[Keyword], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-targeting-keywords-in-an-ad-group",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_targeting_keywords",
+      "requiredParams": ["campaignId", "adgroupId"],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getCampaignNegativeKeyword",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Campaign Negative Keywords",
+      "title": "Get a Campaign Negative Keyword",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/negativekeywords/{keywordId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "keywordId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "NegativeKeywordResponse {data: NegativeKeyword, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-campaign-negative-keyword",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_campaign_negative_keyword",
+      "requiredParams": ["campaignId", "keywordId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllCampaignNegativeKeywords",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Campaign Negative Keywords",
+      "title": "Get All Campaign Negative Keywords",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/negativekeywords",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "NegativeKeywordListResponse {data:[NegativeKeyword], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-campaign-negative-keywords",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_campaign_negative_keywords",
+      "requiredParams": ["campaignId"],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getAdGroupNegativeKeyword",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Get an Ad Group Negative Keyword",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/{keywordId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        },
+        {
+          "name": "keywordId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "NegativeKeywordResponse {data: NegativeKeyword, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-an-ad-group-negative-keyword",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_ad_group_negative_keyword",
+      "requiredParams": ["campaignId", "adgroupId", "keywordId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllAdGroupNegativeKeywords",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Get All Ad Group Negative Keywords",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "NegativeKeywordListResponse {data:[NegativeKeyword], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-ad-group-negative-keywords",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_ad_group_negative_keywords",
+      "requiredParams": ["campaignId", "adgroupId"],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.searchGeolocations",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Search Geolocations",
+      "title": "Search for Geolocations",
+      "method": "GET",
+      "path": "/search/geo",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": false,
+          "default": "*:*"
+        },
+        {
+          "name": "entity",
+          "type": "string",
+          "required": false,
+          "allowed": ["Country", "AdminArea", "Locality"]
+        },
+        {
+          "name": "countrycode",
+          "type": "string",
+          "required": false,
+          "default": "US"
+        },
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "SearchEntityListResponse {data:[SearchEntity], pagination, error}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/search-for-geolocations",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_search_geolocations",
+      "requiredParams": [],
+      "optionalParams": ["query", "entity", "countrycode", "limit", "offset"]
+    },
+    {
+      "id": "v5.getAd",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ads",
+      "title": "Get an Ad",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        },
+        {
+          "name": "adId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdResponse {data: Ad}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-an-ad",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_ad",
+      "requiredParams": ["campaignId", "adgroupId", "adId"],
+      "optionalParams": ["fields"]
+    },
+    {
+      "id": "v5.getAllAds",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ads",
+      "title": "Get All Ads",
+      "method": "GET",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads",
+      "pathParams": [
+        {
+          "name": "campaignId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the campaign"
+        },
+        {
+          "name": "adgroupId",
+          "type": "int64",
+          "required": true,
+          "description": "The unique identifier for the ad group"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdListResponse {data:[Ad], pagination}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-ads",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_ads",
+      "notes": [
+        "limit/offset come from Apple's general Pagination object; the endpoint page lists no query parameters"
+      ],
+      "requiredParams": ["campaignId", "adgroupId"],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getAdCreativeRejectionReason",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Ad Rejection Reasons",
+      "title": "Get Ad Creative Rejection Reasons",
+      "method": "GET",
+      "path": "/product-page-reasons/{productPageReasonId}",
+      "pathParams": [
+        {
+          "name": "productPageReasonId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ProductPageReasonResponse {data: ProductPageReason}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/gets-a-product-page-reason",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_ad_creative_rejection_reason",
+      "requiredParams": ["productPageReasonId"],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getCreative",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Creatives",
+      "title": "Get a Creative",
+      "method": "GET",
+      "path": "/creatives/{creativeId}",
+      "pathParams": [
+        {
+          "name": "creativeId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "includeDeletedCreativeSetAssets",
+          "type": "boolean",
+          "required": false
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CreativeResponse {data: Creative}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-creative",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_creative",
+      "requiredParams": ["creativeId"],
+      "optionalParams": ["includeDeletedCreativeSetAssets", "fields"]
+    },
+    {
+      "id": "v5.getAllCreatives",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Creatives",
+      "title": "Get All Creatives",
+      "method": "GET",
+      "path": "/creatives",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "maximum": 1000
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "fields",
+          "type": "string (comma-separated)",
+          "required": false,
+          "note": "Partial fetch, documented in 'Using Apple Ads API Functionality'"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CreativeListResponse {data:[Creative], pagination}",
+      "pagination": "offset/limit query params (default 20, max 1000); response pagination {totalResults,startIndex,itemsPerPage}",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-creatives",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_creatives",
+      "requiredParams": [],
+      "optionalParams": ["limit", "offset", "fields"]
+    },
+    {
+      "id": "v5.getProductPages",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Custom Product Pages",
+      "title": "Get Product Pages",
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "name",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "states",
+          "type": "string",
+          "required": false,
+          "allowed": ["HIDDEN", "VISIBLE"]
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ProductPageDetailListResponse {data:[ProductPageDetail]}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-product-pages",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_product_pages",
+      "requiredParams": ["adamId"],
+      "optionalParams": ["name", "states"]
+    },
+    {
+      "id": "v5.getProductPage",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Custom Product Pages",
+      "title": "Get Product Pages by Identifier",
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages/{productPageId}",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        },
+        {
+          "name": "productPageId",
+          "type": "string",
+          "required": true,
+          "description": "Custom product page identifier"
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ProductPageDetailResponse {data: ProductPageDetail}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-product-pages-by-identifier",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_product_page",
+      "requiredParams": ["adamId", "productPageId"],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getProductPageLocales",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Custom Product Pages",
+      "title": "Get Product Page Locales",
+      "method": "GET",
+      "path": "/apps/{adamId}/product-pages/{productPageId}/locale-details",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        },
+        {
+          "name": "productPageId",
+          "type": "string",
+          "required": true,
+          "description": "Custom product page identifier"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "deviceClasses",
+          "type": "string",
+          "required": false,
+          "allowed": ["IPAD", "IPHONE"]
+        },
+        {
+          "name": "expand",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "languageCodes",
+          "type": "string (comma-separated)",
+          "required": false
+        },
+        {
+          "name": "languages",
+          "type": "string",
+          "required": false
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ProductPageLocaleDetailListResponse {data:[ProductPageLocaleDetail]}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-product-page-locales",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_product_page_locales",
+      "requiredParams": ["adamId", "productPageId"],
+      "optionalParams": ["deviceClasses", "expand", "languageCodes", "languages"]
+    },
+    {
+      "id": "v5.getSupportedCountriesOrRegions",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Custom Product Pages",
+      "title": "Get Supported Countries or Regions",
+      "method": "GET",
+      "path": "/countries-or-regions",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "countriesOrRegions",
+          "type": "string (comma-separated)",
+          "required": false
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CountriesOrRegionsListResponse {data:[CountryOrRegion]}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-supported-countries-or-regions",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_supported_countries_or_regions",
+      "requiredParams": [],
+      "optionalParams": ["countriesOrRegions"]
+    },
+    {
+      "id": "v5.getAppPreviewDeviceSizes",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Custom Product Pages",
+      "title": "Get App Preview Device Sizes",
+      "method": "GET",
+      "path": "/creativeappmappings/devices",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AppPreviewDevicesMappingResponse {data: {deviceKey: displayName}}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-app-preview-device-sizes",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_app_preview_device_sizes",
+      "requiredParams": [],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getImpressionShareReport",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Impression Share Reports",
+      "title": "Get a Single Impression Share Report",
+      "method": "GET",
+      "path": "/custom-reports/{reportId}",
+      "pathParams": [
+        {
+          "name": "reportId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CustomReportResponseBody {data: CustomReportResponse, pagination, error}",
+      "pagination": "none",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-a-single-impression-share-report",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_impression_share_report",
+      "notes": ["downloadUri is valid for 90 seconds once state is COMPLETED; reports remain for 2 days"],
+      "requiredParams": ["reportId"],
+      "optionalParams": []
+    },
+    {
+      "id": "v5.getAllImpressionShareReports",
+      "api": "campaign-management-v5",
+      "apiVersion": "5",
+      "category": "Impression Share Reports",
+      "title": "Get All Impression Share Reports",
+      "method": "GET",
+      "path": "/custom-reports",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "field",
+          "type": "string",
+          "required": false,
+          "default": "creationTime"
+        },
+        {
+          "name": "limit",
+          "type": "integer",
+          "required": false,
+          "default": 20,
+          "minimum": 1,
+          "maximum": 50
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "required": false,
+          "default": 0,
+          "minimum": 0
+        },
+        {
+          "name": "sortOrder",
+          "type": "string",
+          "required": false,
+          "default": "DESCENDING"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: orgId={orgId}"],
+      "contextHeader": "orgId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CustomReportResponseBody {data:[CustomReportResponse], pagination, error}",
+      "pagination": "offset/limit (default 20, max 50)",
+      "rateLimit": "HTTP 429 when exceeded; no numeric limits published; exponential backoff 2s/4s/8s/16s",
+      "docUrl": "https://developer.apple.com/documentation/apple_ads/get-all-impression-share-reports",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "v5_get_all_impression_share_reports",
+      "requiredParams": [],
+      "optionalParams": ["field", "limit", "offset", "sortOrder"]
+    },
+    {
+      "id": "platform.getMe",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Account Management",
+      "title": "Get Me Details",
+      "method": "GET",
+      "path": "/me",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "MeResponse {result: {userId, orgId}}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-current-user-details",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_me",
+      "requiredParams": [],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getUserAcls",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Account Management",
+      "title": "Get User ACL",
+      "method": "GET",
+      "path": "/acls",
+      "pathParams": [],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "UserAclListResponse {result: {acls: [{adAccount, roles}]}}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-user-acls",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_user_acls",
+      "requiredParams": [],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getOrg",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Account Management",
+      "title": "Get Org by ID",
+      "method": "GET",
+      "path": "/orgs/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "OrgResponse {result: Org}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-orgs-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_org",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAdAccount",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Account Management",
+      "title": "Get Ad Account by ID",
+      "method": "GET",
+      "path": "/ad-accounts/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdAccountResponse {result: AdAccount}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-ad-accounts-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_ad_account",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAdvertiserResources",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Account Management",
+      "title": "Get Advertiser Resources",
+      "method": "GET",
+      "path": "/advertiser-resources",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "resourceType",
+          "type": "AdvertiserResourceType",
+          "required": true,
+          "allowed": ["CONTENT_PROVIDER", "BUSINESS_BRAND"]
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}"],
+      "contextHeader": null,
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdvertiserResourceListResponse {result: [Delegation]}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-advertiser-resources",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_advertiser_resources",
+      "requiredParams": ["resourceType"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.searchApps",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Search Apps",
+      "title": "Search for Apps",
+      "method": "GET",
+      "path": "/search/apps",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "query",
+          "type": "string",
+          "required": false,
+          "note": "min 3 characters (2 for CJK)"
+        },
+        {
+          "name": "returnOwnedApps",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "cpids",
+          "type": "string (comma-separated)",
+          "required": false
+        },
+        {
+          "name": "storeFronts",
+          "type": "[string] (repeated)",
+          "required": false
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "limit",
+          "type": "int32",
+          "required": false,
+          "default": 20,
+          "note": "capped at service-side MAXLIMIT"
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AppsSearchResponse {result: [AppInfo], pagination: {totalCount, offset, pageSize}}",
+      "pagination": "offset/limit query params (default 20); response pagination {totalCount, offset, pageSize}",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/searches-for-a-list-of-apps",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_search_apps",
+      "notes": ["At least one of query, cpids or returnOwnedApps=true is required"],
+      "requiredParams": [],
+      "optionalParams": ["query", "returnOwnedApps", "cpids", "storeFronts", "offset", "limit"]
+    },
+    {
+      "id": "platform.getAppDetails",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Search Apps",
+      "title": "Get App Details by Adam ID",
+      "method": "GET",
+      "path": "/apps/{adamId}",
+      "pathParams": [
+        {
+          "name": "adamId",
+          "type": "int64",
+          "required": true,
+          "description": "App Store app identifier"
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AppDetailsResponse {result: AppDetails}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-app-details-by-adam-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_app_details",
+      "requiredParams": ["adamId"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAppRejectionReason",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "App Eligibility",
+      "title": "Get Rejection Reasons",
+      "method": "GET",
+      "path": "/rejection-reasons/apps/{rejectionReasonId}",
+      "pathParams": [
+        {
+          "name": "rejectionReasonId",
+          "type": "int64",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "RejectionReasonResponse {result: CreativeRejectionReason}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/gets-rejection-reasons-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_app_rejection_reason",
+      "requiredParams": ["rejectionReasonId"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getBrand",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ads on Apple Maps",
+      "title": "Get Brand by ID",
+      "method": "GET",
+      "path": "/business-brands/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "BrandResponse {result: Brand}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-brand-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_brand",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getBusinessCategory",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ads on Apple Maps",
+      "title": "Get Business Category",
+      "method": "GET",
+      "path": "/business-categories/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "BusinessCategoryResponse {result: BusinessCategory}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-category-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_business_category",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getLocationGroup",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ads on Apple Maps",
+      "title": "Get Location Group",
+      "method": "GET",
+      "path": "/location-groups/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "LocationGroupResponse {result: LocationGroup}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-location-group-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_location_group",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getLocation",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ads on Apple Maps",
+      "title": "Get a Location",
+      "method": "GET",
+      "path": "/locations/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "LocationResponse {result: Location}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-location-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_location",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getCampaign",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Campaigns",
+      "title": "Get a Campaign",
+      "method": "GET",
+      "path": "/campaigns/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CampaignResponse {result: Campaign}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-campaigns-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_campaign",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getCampaignLegacyAppLimitedStatusReasons",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Campaigns",
+      "title": "Get Legacy App Limited Status Reason Details",
+      "method": "GET",
+      "path": "/campaigns/{id}/legacy-app-limited-status-reason-details",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "LegacyAppLimitedStatusReasonDetailsResponse {result: {countryOrRegionLimitedStatusReasons}}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-campaigns-_id_-legacy-app-limited-status-reason-details",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_campaign_legacy_app_limited_status_reasons",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAdGroup",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ad Groups",
+      "title": "Get an Ad Group",
+      "method": "GET",
+      "path": "/adgroups/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdGroupResponse {result: AdGroup}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-adgroups-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_ad_group",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.searchGeoLocations",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Geo Targeting",
+      "title": "Search Geo Locations",
+      "method": "GET",
+      "path": "/search/geo",
+      "pathParams": [],
+      "queryParams": [
+        {
+          "name": "supplySource",
+          "type": "SearchSupplySourceType",
+          "required": true,
+          "allowed": ["APPSTORE", "MAPS"]
+        },
+        {
+          "name": "query",
+          "type": "string",
+          "required": false,
+          "default": "*:*"
+        },
+        {
+          "name": "entity",
+          "type": "GeoEntityType",
+          "required": false,
+          "allowed": ["Country", "AdminArea", "Locality", "PostalCode"]
+        },
+        {
+          "name": "countrycode",
+          "type": "string",
+          "required": false,
+          "default": "US"
+        },
+        {
+          "name": "eligible",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "name": "offset",
+          "type": "int32",
+          "required": false,
+          "default": 0
+        },
+        {
+          "name": "pageSize",
+          "type": "int32",
+          "required": false,
+          "default": 20
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "GeoSearchResponse {result: [SearchEntity], pagination: {totalCount, offset, pageSize}}",
+      "pagination": "offset/pageSize query params (default 20); response pagination {totalCount, offset, pageSize}",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/searches-for-a-list-of-geo-locations",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_search_geo_locations",
+      "requiredParams": ["supplySource"],
+      "optionalParams": ["query", "entity", "countrycode", "eligible", "offset", "pageSize"]
+    },
+    {
+      "id": "platform.getKeyword",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Keywords",
+      "title": "Get a Keyword",
+      "method": "GET",
+      "path": "/keywords/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "KeywordResponse {result: Keyword}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-keywords-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_keyword",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getNegativeKeyword",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Negative Keywords",
+      "title": "Get a Negative Keyword",
+      "method": "GET",
+      "path": "/negative-keywords/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "NegativeKeywordResponse {result: NegativeKeyword}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-negative-keywords-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_negative_keyword",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAd",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Ads",
+      "title": "Get an Ad",
+      "method": "GET",
+      "path": "/ads/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AdResponse {result: Ad}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-ads-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_ad",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getCreative",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Creatives",
+      "title": "Get an Ad Creative",
+      "method": "GET",
+      "path": "/creatives/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "CreativeResponse {result: Creative}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-creatives-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_creative",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getAsset",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Assets",
+      "title": "Get Asset",
+      "method": "GET",
+      "path": "/assets/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "AssetResponse {result: Asset}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-asset-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_asset",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getProductPage",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Product Pages",
+      "title": "Get Product Page by ID",
+      "method": "GET",
+      "path": "/product-pages/{productPageId}",
+      "pathParams": [
+        {
+          "name": "productPageId",
+          "type": "string",
+          "required": true,
+          "description": "UUID assigned by App Store Connect"
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ProductPageDetailsResponse {result: ProductPageDetails}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-product-page-by-id",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_product_page",
+      "requiredParams": ["productPageId"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getBudgetOrder",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Budget Orders",
+      "title": "Get a Budget Order by ID",
+      "method": "GET",
+      "path": "/shared-budgets/{id}",
+      "pathParams": [
+        {
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "queryParams": [],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "SharedBudgetResponse {result: SharedBudget}",
+      "pagination": "none",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-shared-budgets-_id_",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_budget_order",
+      "requiredParams": ["id"],
+      "optionalParams": []
+    },
+    {
+      "id": "platform.getChangeHistoryDetail",
+      "api": "platform-v1",
+      "apiVersion": "1.0",
+      "category": "Change History",
+      "title": "Get Change History Detail",
+      "method": "GET",
+      "path": "/change-history/{detailId}",
+      "pathParams": [
+        {
+          "name": "detailId",
+          "type": "string",
+          "required": true,
+          "description": "EntityType.entityId.txnId"
+        }
+      ],
+      "queryParams": [
+        {
+          "name": "limit",
+          "type": "integer",
+          "required": false,
+          "default": 100
+        },
+        {
+          "name": "offset",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "headers": ["Authorization: Bearer {access_token}", "X-AP-Context: adAccountId={adAccountId}"],
+      "contextHeader": "adAccountId",
+      "auth": "OAuth 2.0 client credentials; Bearer access token (scope searchadsorg)",
+      "response": "ChangeDetailsResponse {dataType, result: [ChangeDetails], pagination}",
+      "pagination": "limit/offset page through the nested changes array (single request per call)",
+      "rateLimit": "RateLimit-Limit/Remaining/Reset headers on every response; HTTP 429 with Retry-After",
+      "docUrl": "https://developer.apple.com/documentation/apple-ads-platform-api/get-change-details-by-detailid",
+      "required": true,
+      "implemented": true,
+      "mcpTool": "platform_get_change_history_detail",
+      "requiredParams": ["detailId"],
+      "optionalParams": ["limit", "offset"]
+    }
+  ],
+  "excluded": [
+    {
+      "api": "campaign-management-v5",
+      "category": "App Eligibility",
+      "title": "Find App Eligibility Records",
+      "method": "POST",
+      "path": "/apps/{adamId}/eligibilities/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaigns",
+      "title": "Create a Campaign",
+      "method": "POST",
+      "path": "/campaigns",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaigns",
+      "title": "Find Campaigns",
+      "method": "POST",
+      "path": "/campaigns/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaigns",
+      "title": "Update a Campaign",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaigns",
+      "title": "Delete a Campaign",
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Budget Orders",
+      "title": "Create a Budget Order",
+      "method": "POST",
+      "path": "/budgetorders",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Budget Orders",
+      "title": "Update a Budget Order",
+      "method": "PUT",
+      "path": "/budgetorders/{boId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Groups",
+      "title": "Create an Ad Group",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Groups",
+      "title": "Find Ad Groups",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Groups",
+      "title": "Find Ad Groups (org-level)",
+      "method": "POST",
+      "path": "/adgroups/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Groups",
+      "title": "Update an Ad Group",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Groups",
+      "title": "Delete an Ad Group",
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Targeting Keywords",
+      "title": "Create Targeting Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Targeting Keywords",
+      "title": "Find Targeting Keywords in a Campaign",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/targetingkeywords/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Targeting Keywords",
+      "title": "Update Targeting Keywords",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Targeting Keywords",
+      "title": "Delete Targeting Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/delete/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Targeting Keywords",
+      "title": "Delete a Targeting Keyword",
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/targetingkeywords/{keywordId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaign Negative Keywords",
+      "title": "Create Campaign Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaign Negative Keywords",
+      "title": "Find Campaign Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaign Negative Keywords",
+      "title": "Update Campaign Negative Keywords",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/negativekeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Campaign Negative Keywords",
+      "title": "Delete Campaign Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/negativekeywords/delete/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Create Ad Group Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Find Ad Group Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/negativekeywords/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Update Ad Group Negative Keywords",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Group Negative Keywords",
+      "title": "Delete Ad Group Negative Keywords",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/negativekeywords/delete/bulk",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Search Geolocations",
+      "title": "Get a List of Geo Locations",
+      "method": "POST",
+      "path": "/search/geo",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ads",
+      "title": "Create an Ad",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ads",
+      "title": "Find Ads",
+      "method": "POST",
+      "path": "/campaigns/{campaignId}/ads/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ads",
+      "title": "Find Ads (org-level)",
+      "method": "POST",
+      "path": "/ads/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ads",
+      "title": "Update an Ad",
+      "method": "PUT",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ads",
+      "title": "Delete an Ad",
+      "method": "DELETE",
+      "path": "/campaigns/{campaignId}/adgroups/{adgroupId}/ads/{adId}",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Rejection Reasons",
+      "title": "Find Ad Creative Rejection Reasons",
+      "method": "POST",
+      "path": "/product-page-reasons/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Ad Rejection Reasons",
+      "title": "Find App Assets",
+      "method": "POST",
+      "path": "/apps/{adamId}/assets/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Creatives",
+      "title": "Create a Creative",
+      "method": "POST",
+      "path": "/creatives",
+      "reason": "mutation"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Creatives",
+      "title": "Find Creatives",
+      "method": "POST",
+      "path": "/creatives/find",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Campaign-Level Reports",
+      "method": "POST",
+      "path": "/reports/campaigns",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Ad Group-Level Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Keyword-Level Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/keywords",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Keyword-Level within Ad Group Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups/{adgroupId}/keywords",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Search Term-Level Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/searchterms",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Search Term-Level within Ad Group Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/adgroups/{adgroupId}/searchterms",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Reports",
+      "title": "Get Ad-Level Reports",
+      "method": "POST",
+      "path": "/reports/campaigns/{campaignId}/ads",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "campaign-management-v5",
+      "category": "Impression Share Reports",
+      "title": "Impression Share Report",
+      "method": "POST",
+      "path": "/custom-reports",
+      "reason": "async-report-job-creation",
+      "note": "Creates an asynchronous report job; existing reports are readable via GET /custom-reports and GET /custom-reports/{reportId}"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Account Management",
+      "title": "Create Ad Accounts",
+      "method": "POST",
+      "path": "/ad-accounts",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Account Management",
+      "title": "Update Ad Accounts",
+      "method": "PUT",
+      "path": "/ad-accounts/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Search Apps",
+      "title": "Query Supported App Languages",
+      "method": "POST",
+      "path": "/metadata/apps/supported-languages/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "App Eligibility",
+      "title": "Check App Eligibility",
+      "method": "POST",
+      "path": "/eligibilities/apps/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "App Eligibility",
+      "title": "Query Rejection Reasons",
+      "method": "POST",
+      "path": "/rejection-reasons/apps/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Query Brands",
+      "method": "POST",
+      "path": "/business-brands/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Query Business Categories",
+      "method": "POST",
+      "path": "/business-categories/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Query Rejection Reasons for Brands",
+      "method": "POST",
+      "path": "/rejection-reasons/business-brands/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Create Location Group",
+      "method": "POST",
+      "path": "/location-groups",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Query Location Groups",
+      "method": "POST",
+      "path": "/location-groups/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Update Location Group",
+      "method": "PUT",
+      "path": "/location-groups/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Delete Location Group",
+      "method": "DELETE",
+      "path": "/location-groups/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads on Apple Maps",
+      "title": "Query for Locations",
+      "method": "POST",
+      "path": "/locations/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Campaigns",
+      "title": "Create a Campaign",
+      "method": "POST",
+      "path": "/campaigns",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Campaigns",
+      "title": "Query Campaigns",
+      "method": "POST",
+      "path": "/campaigns/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Campaigns",
+      "title": "Update a Campaign",
+      "method": "PUT",
+      "path": "/campaigns/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Campaigns",
+      "title": "Delete a Campaign",
+      "method": "DELETE",
+      "path": "/campaigns/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ad Groups",
+      "title": "Create an Ad Group",
+      "method": "POST",
+      "path": "/adgroups",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ad Groups",
+      "title": "Query Ad Groups",
+      "method": "POST",
+      "path": "/adgroups/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ad Groups",
+      "title": "Update an Ad Group",
+      "method": "PUT",
+      "path": "/adgroups/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ad Groups",
+      "title": "Delete an Ad Group",
+      "method": "DELETE",
+      "path": "/adgroups/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Geo Targeting",
+      "title": "Query Geo Locations",
+      "method": "POST",
+      "path": "/search/geo",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Keywords",
+      "title": "Create a Keyword",
+      "method": "POST",
+      "path": "/keywords",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Keywords",
+      "title": "Query Keywords",
+      "method": "POST",
+      "path": "/keywords/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Keywords",
+      "title": "Update a Keyword",
+      "method": "PUT",
+      "path": "/keywords/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Keywords",
+      "title": "Delete a Keyword",
+      "method": "DELETE",
+      "path": "/keywords/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Negative Keywords",
+      "title": "Create a Negative Keyword",
+      "method": "POST",
+      "path": "/negative-keywords",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Negative Keywords",
+      "title": "Query Negative Keywords",
+      "method": "POST",
+      "path": "/negative-keywords/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Negative Keywords",
+      "title": "Update a Negative Keyword",
+      "method": "PUT",
+      "path": "/negative-keywords/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Negative Keywords",
+      "title": "Delete a Negative Keyword",
+      "method": "DELETE",
+      "path": "/negative-keywords/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads",
+      "title": "Create an Ad",
+      "method": "POST",
+      "path": "/ads",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads",
+      "title": "Query Ads",
+      "method": "POST",
+      "path": "/ads/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads",
+      "title": "Update an Ad",
+      "method": "PUT",
+      "path": "/ads/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Ads",
+      "title": "Delete an Ad",
+      "method": "DELETE",
+      "path": "/ads/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Creatives",
+      "title": "Create an Ad Creative",
+      "method": "POST",
+      "path": "/creatives",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Creatives",
+      "title": "Query Ad Creatives",
+      "method": "POST",
+      "path": "/creatives/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Creatives",
+      "title": "Update an Ad Creative",
+      "method": "PUT",
+      "path": "/creatives/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Creatives",
+      "title": "Delete an Ad Creative",
+      "method": "DELETE",
+      "path": "/creatives/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Assets",
+      "title": "Upload Asset",
+      "method": "POST",
+      "path": "/assets/upload",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Assets",
+      "title": "Query Assets",
+      "method": "POST",
+      "path": "/assets/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Assets",
+      "title": "Delete Asset",
+      "method": "DELETE",
+      "path": "/assets/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Product Pages",
+      "title": "Query Product Pages",
+      "method": "POST",
+      "path": "/product-pages/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Product Pages",
+      "title": "Query Product Page Locale Details",
+      "method": "POST",
+      "path": "/product-pages/locale-details/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Product Pages",
+      "title": "Query App Locale Details",
+      "method": "POST",
+      "path": "/apps/{adamId}/locale-details/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Create Keywords",
+      "method": "POST",
+      "path": "/keywords/bulk-create",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Update Keywords",
+      "method": "POST",
+      "path": "/keywords/bulk-update",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Delete Keywords",
+      "method": "POST",
+      "path": "/keywords/bulk-delete",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Create Negative Keywords",
+      "method": "POST",
+      "path": "/negative-keywords/bulk-create",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Update Negative Keywords",
+      "method": "POST",
+      "path": "/negative-keywords/bulk-update",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Bulk Operations",
+      "title": "Bulk Delete Negative Keywords",
+      "method": "POST",
+      "path": "/negative-keywords/bulk-delete",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Budget Orders",
+      "title": "Create a Budget Order",
+      "method": "POST",
+      "path": "/shared-budgets",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Budget Orders",
+      "title": "Query Budget Orders",
+      "method": "POST",
+      "path": "/shared-budgets/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Budget Orders",
+      "title": "Update a Budget Order",
+      "method": "PUT",
+      "path": "/shared-budgets/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Budget Orders",
+      "title": "Delete a Budget Order",
+      "method": "DELETE",
+      "path": "/shared-budgets/{id}",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Campaigns Report (App Store)",
+      "method": "POST",
+      "path": "/reports/apps/campaigns/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Ad Groups Report (App Store)",
+      "method": "POST",
+      "path": "/reports/apps/adgroups/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Ads Report (App Store)",
+      "method": "POST",
+      "path": "/reports/apps/ads/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Keywords Report (App Store)",
+      "method": "POST",
+      "path": "/reports/apps/keywords/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Search Terms Report (App Store)",
+      "method": "POST",
+      "path": "/reports/apps/searchterms/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Campaigns Report (Brands)",
+      "method": "POST",
+      "path": "/reports/business-brands/campaigns/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Ad Groups Report (Brands)",
+      "method": "POST",
+      "path": "/reports/business-brands/adgroups/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Ads Report (Brands)",
+      "method": "POST",
+      "path": "/reports/business-brands/ads/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Keywords Report (Brands)",
+      "method": "POST",
+      "path": "/reports/business-brands/keywords/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Reports",
+      "title": "Search Terms Report (Brands)",
+      "method": "POST",
+      "path": "/reports/business-brands/searchterms/query",
+      "reason": "report-generation-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Insights",
+      "title": "Impression Share Query",
+      "method": "POST",
+      "path": "/insights/apps/impression-share/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Insights",
+      "title": "Search Term Popularity Query",
+      "method": "POST",
+      "path": "/insights/apps/search-term-popularity/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Query Daily Budget Recommendations",
+      "method": "POST",
+      "path": "/recommendations/daily-budgets/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Apply Daily Budget Recommendations",
+      "method": "POST",
+      "path": "/recommendations/daily-budgets/apply",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Dismiss Daily Budget Recommendations",
+      "method": "POST",
+      "path": "/recommendations/daily-budgets/dismiss",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Query Target CPA Recommendations",
+      "method": "POST",
+      "path": "/recommendations/target-cpas/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Apply Target CPA Recommendations",
+      "method": "POST",
+      "path": "/recommendations/target-cpas/apply",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Recommendations",
+      "title": "Dismiss Target CPA Recommendations",
+      "method": "POST",
+      "path": "/recommendations/target-cpas/dismiss",
+      "reason": "mutation"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Suggestions",
+      "title": "Query Keyword Suggestions",
+      "method": "POST",
+      "path": "/suggestions/keywords/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Suggestions",
+      "title": "Query Phrase Suggestions",
+      "method": "POST",
+      "path": "/suggestions/phrases/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Suggestions",
+      "title": "Query Category Suggestions",
+      "method": "POST",
+      "path": "/suggestions/categories/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Suggestions",
+      "title": "Query Target CPA Suggestion",
+      "method": "POST",
+      "path": "/suggestions/target-cpas/query",
+      "reason": "read-via-post"
+    },
+    {
+      "api": "platform-v1",
+      "category": "Change History",
+      "title": "Query Change History",
+      "method": "POST",
+      "path": "/change-history/query",
+      "reason": "read-via-post"
+    }
+  ],
+  "notDocumented": [
+    {
+      "api": "campaign-management-v5",
+      "title": "Creative Sets endpoints",
+      "note": "Deprecated and unavailable in API 5 (changelog 5.0); no endpoint paths are documented, so nothing can be implemented."
+    }
+  ]
+}

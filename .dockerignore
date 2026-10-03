@@ -1,0 +1,15 @@
+# Keep the build context minimal and never send credentials to the Docker daemon.
+**
+!package.json
+!package-lock.json
+!tsconfig.json
+!tsconfig.build.json
+!src/**
+!scripts/postbuild.mjs
+!docker/healthcheck.mjs
+# Explicitly excluded even if the allow-list above changes:
+config/accounts.json
+**/*.pem
+**/*.p8
+**/.env
+**/.env.*

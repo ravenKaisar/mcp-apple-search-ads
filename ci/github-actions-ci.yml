@@ -1,0 +1,193 @@
+name: CI
+
+# Pull requests: lint, typecheck, all tests, Docker build + smoke test.
+# Pushes to main: the same, then build linux/amd64 + linux/arm64 and push to GHCR
+# (ghcr.io/<owner>/<repo>, or vars.APP_IMAGE_NAME) tagged `latest` and `sha-<full commit sha>`,
+# then smoke-test the pushed image by digest.
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Set up Actions
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (ESLint + Prettier)
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit + security tests (every GET endpoint and every MCP tool)
+        run: npm run test:unit
+
+      - name: Integration tests (MSW-mocked Apple APIs)
+        run: npm run test:integration
+
+      - name: Build
+        run: npm run build
+
+      - name: E2E tests (stdio + HTTP transports against a mock Apple API)
+        run: npx vitest run --project e2e
+
+      - name: Coverage report
+        run: npm run test:coverage
+
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  docker:
+    name: Docker build + smoke test
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 20
+    steps:
+      - name: Set up Actions
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # Optional: authenticated base-image pulls avoid Docker Hub rate limits.
+      - name: Login to Docker Hub
+        if: ${{ vars.DOCKERHUB_USERNAME != '' }}
+        uses: docker/login-action@v4
+        with:
+          registry: docker.io
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker build
+        run: docker build -t apple-search-ads-mcp:ci .
+
+      - name: Docker test (health check, non-root, no baked credentials, MCP over HTTP)
+        run: SKIP_BUILD=1 IMAGE=apple-search-ads-mcp:ci bash scripts/docker-smoke-test.sh
+
+  build:
+    name: Build and push image (GHCR)
+    runs-on: ubuntu-latest
+    needs: [test, docker]
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    environment: production
+    timeout-minutes: 40
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GHCR_OWNER: ${{ github.repository_owner }}
+    outputs:
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - name: Set up Actions
+        uses: actions/checkout@v7
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Build
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USERNAME != '' && secrets.GHCR_USERNAME || github.repository_owner }}
+          password: ${{ secrets.GHCR_TOKEN != '' && secrets.GHCR_TOKEN || github.token }}
+
+      - name: Login to Docker Hub
+        if: ${{ vars.DOCKERHUB_USERNAME != '' }}
+        uses: docker/login-action@v4
+        with:
+          registry: docker.io
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: |
+            ${{ vars.APP_IMAGE_NAME != '' && vars.APP_IMAGE_NAME || format('ghcr.io/{0}', github.repository) }}
+          flavor: |
+            latest=false
+          tags: |
+            type=raw,value=latest
+            type=sha,format=long
+          labels: |
+            org.opencontainers.image.title=Apple Search Ads MCP
+            org.opencontainers.image.description=Read-only (GET-only) MCP server for the Apple Search Ads / Apple Ads APIs
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Build and Push
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Dockerfile
+          target: runtime
+          labels: ${{ steps.meta.outputs.labels }}
+          # arm64 lets the image run natively on Apple Silicon (e.g. as a stdio MCP server via `docker run -i`).
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          provenance: true
+          sbom: true
+          cache-from: type=gha,scope=searchads-mcp
+          cache-to: type=gha,mode=max,scope=searchads-mcp
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Smoke-test the pushed image
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          first_tag="$(printf '%s\n' "$TAGS" | head -n1)"
+          image="${first_tag%:*}@${DIGEST}"
+          docker pull "$image"
+          SKIP_BUILD=1 IMAGE="$image" bash scripts/docker-smoke-test.sh
+          {
+            echo "### Published image"
+            echo
+            echo "\`${image}\`"
+            echo
+            echo "Tags:"
+            printf '%s\n' "$TAGS" | sed 's/^/- `/; s/$/`/'
+          } >> "$GITHUB_STEP_SUMMARY"

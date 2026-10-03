@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+*.log
+.env
+.env.*
+!.env.example
+# Real credentials must never be committed
+config/accounts.json
+config/*.local.json
+secrets/
+*.pem
+*.p8

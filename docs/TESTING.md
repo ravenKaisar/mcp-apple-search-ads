@@ -1,0 +1,48 @@
+# Testing
+
+No test ever contacts Apple. Apple is replaced by an in-process fake (unit), MSW (integration) or a local mock HTTP
+server (e2e and Docker).
+
+```bash
+npm run lint             # ESLint (type-aware) + Prettier
+npm run typecheck        # tsc over src, tests and scripts
+npm run test:unit        # unit + security suites
+npm run test:integration # MSW suites
+npm run test:e2e         # builds, then spawns the compiled server (stdio and HTTP)
+npm test                 # all three
+npm run test:coverage    # unit + integration with v8 coverage and thresholds (90% lines/functions/statements, 80% branches)
+npm run docker:test      # docker build + smoke test
+```
+
+## Suites
+
+| Suite                   | Location                                                         | What it proves                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Configuration           | `tests/unit/config-*.test.ts`, `examples.test.ts`                | env parsing/defaults/https enforcement; accounts schema, key sources, malformed/RSA/P-384 keys, duplicates, unknown keys, malicious ids; credentials never serialize; shipped examples stay valid                                                                                                                                                                                                         |
+| Authentication          | `tests/unit/auth.test.ts`                                        | ES256 JWT header/claims/signature (verified with the public key); token request format; caching; expiry and refresh; skew; single-flight; invalidation; invalid credentials (400/401); token endpoint 5xx retries; network failures; malformed token responses; unknown account; no secrets in errors                                                                                                     |
+| GET-only HTTP client    | `tests/unit/http-client.test.ts`                                 | method guard (POST/PUT/PATCH/DELETE/HEAD/OPTIONS/lowercase), body refusal, URL allow-list, timeouts, resets, DNS, refused connections, cancellation, malformed JSON, empty bodies, oversized responses                                                                                                                                                                                                    |
+| Apple client            | `tests/unit/client.test.ts`                                      | URL building/encoding, csv vs repeated params, unsafe path segments, context headers, 401 refresh, 429 `Retry-After` / `RateLimit-Reset`, max wait, 5xx retries, non-retryable statuses, network retries, error envelope mapping, proactive rate limiting, pagination helpers                                                                                                                             |
+| **Per-endpoint matrix** | `tests/unit/endpoint-matrix.test.ts`                             | for **each of the 54 GET endpoints**: exact GET request (path, headers, query), 200, empty 200, empty body, 400, 401 (+ single refresh), 403, 404, 409, 429, 500 (+ retries), timeout, connection reset, DNS failure, invalid JSON, unexpected JSON                                                                                                                                                       |
+| **Per-tool matrix**     | `tests/unit/tools.test.ts`                                       | for **each MCP tool**: valid input → correct Apple GET, missing required param, invalid params (types, unknown keys, traversal, enums, page sizes), unknown account, Apple API error, authentication failure, pagination (single page metadata, `fetch_all`, `max_pages` truncation, limits) or rejection of `fetch_all`, no sensitive data even when Apple echoes credentials, context override/defaults |
+| Pagination              | `tests/unit/pagination.test.ts`                                  | totals vs short pages, server-capped page sizes, empty data, `max_pages`, `max_records` (shrinking last request), start offset, abort, option validation                                                                                                                                                                                                                                                  |
+| Registry & coverage     | `tests/unit/registry.test.ts`, `tests/unit/api-coverage.test.ts` | registry invariants; every required GET endpoint in `docs/api-coverage.json` is implemented with matching tool, params and docs URL; nothing implemented outside the inventory; no excluded endpoint implemented; `API-COVERAGE.md` up to date                                                                                                                                                            |
+| MCP server              | `tests/unit/mcp-server.test.ts`                                  | tools/list schemas & annotations, tool calls, structured errors, unknown tool, resources                                                                                                                                                                                                                                                                                                                  |
+| HTTP transport          | `tests/unit/http-transport.test.ts`                              | `/health`, bearer auth, DNS-rebinding protection, 413/400/405/404, SDK client sessions sharing the token cache                                                                                                                                                                                                                                                                                            |
+| Logging                 | `tests/unit/logging-and-redaction.test.ts`                       | JSON lines, levels, stderr only, redaction of keys/values, no credentials in request logs                                                                                                                                                                                                                                                                                                                 |
+| **Security**            | `tests/security/*.test.ts`                                       | POST/PUT/PATCH/DELETE cannot execute; every tool only sends GET; no method/url/body parameters; static source scan; account isolation incl. 40 concurrent mixed calls; credential leakage (outputs, errors, auth failures, logs, `inspect`); malicious account ids (`../../other-account`, null bytes, `__proto__`, …), path/query/header injection                                                       |
+| Integration             | `tests/integration/*.test.ts`                                    | production config (accounts file on disk, default Apple URLs) + real `fetch` + MCP protocol, Apple mocked with MSW (`onUnhandledRequest: 'error'`): every endpoint, multi-page `fetch_all` (1000-record pages), safety limits, `pageSize` paging, 429 retry, token revocation → refresh, 404 details, network errors, malformed JSON, invalid credentials, account isolation                              |
+| E2E                     | `tests/e2e/*.test.ts`                                            | compiled `dist/index.js` spawned over **stdio** and **HTTP**, mock Apple server (`tests/e2e/mock-apple-api.mjs`) validating OAuth form/JWT, bearer tokens and `X-AP-Context`; every tool end to end on both transports; stdout purity; stderr JSON logs; auth, 405/404/400/413                                                                                                                            |
+| Docker                  | `scripts/docker-smoke-test.sh`                                   | image builds, no baked credentials, non-root, becomes healthy, `/health`, auth, MCP over HTTP through the mock API, GET-only, clean logs                                                                                                                                                                                                                                                                  |
+
+## Fixtures
+
+`tests/fixtures/apple-responses.json` holds a realistic 200 body for every endpoint, based on the example responses in
+Apple's documentation and wrapped in each API's documented envelope. `tests/helpers/fixtures.ts` derives empty and
+error bodies and valid sample arguments for every endpoint, so the parameterized suites cover new endpoints
+automatically.
+
+## CI
+
+`.github/workflows/ci.yml`: install → lint → typecheck → unit → integration → build → e2e → coverage → Docker build →
+Docker smoke test → (push to `main` only) multi-arch build and push to GHCR → smoke test of the pushed image. Any
+failing GET endpoint test fails the pipeline and nothing is published.
